@@ -1,17 +1,88 @@
 extends layout
+
 block content
+    #form
+        h3 Calculate shortest and fastest paths between cities in Croatia:
+        div.row
+            div.col-sm-1
+                p Source:
+            div.col-sm-4
+                select.form-control
+                    -var data = jsonData.features
+                    -for(var prop in data)
+                        option #{data[prop].properties.f2}
+        div.row
+            div.col-sm-1
+                p Destination:
+            div.col-sm-4
+                select.form-control
+                    -var data = jsonData.features
+                    -for(var prop in data)
+                        option #{data[prop].properties.f2}   
+        div.row
+            div.col-sm-2
+                p.form-check
+                    input#shortestPath.form-check-input(type='radio', name='exampleRadios', value='option1', checked='')
+                    label.form-check-label(for='shortestPath')
+                        | Shortest path
+            div.col-sm-2
+                p.form-check
+                    input#fastestPath.form-check-input(type='radio', name='exampleRadios', value='option2')
+                    label.form-check-label(for='fastestPath')
+                        | Fastest path
+        div.row
+            #submitButton
+                p
+                    button.btn.btn-danger(type='button') CALCULATE
     #map
+    .card
+        .card-header   
+            h4 Results
+        table.table.table-hover.table-fixed
+            thead
+                tr
+                    th(scope='col') #
+                    th(scope='col') Cafe name
+            tbody
+                -var data = jsonData.features
+                -for(var prop in data)
+                    tr
+                        th(scope='row')= prop
+                        td #{data[prop].properties.f2}
     script.
         var myData = !{JSON.stringify(jsonData)};
         // Create variable to hold map element, give initial settings to map
-        var map = L.map('map',{ center: [42.375562, -71.106870], zoom: 14});
+        var map = L.map('map', { 
+            center: [44.4738, 16.4689], 
+            zoom: 7
+        }); 
         // Add OpenStreetMap tile layer to map element
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { 
         	attribution: '© OpenStreetMap' 
         }).addTo(map);
         // Add JSON to map
-        L.geoJson(myData,{
+        var cafes = L.geoJson(myData,{
             onEachFeature: function (feature, layer) {
                 layer.bindPopup(feature.properties.f2);
             }
-        }).addTo(map);
+        });
+
+        var pointA = new L.LatLng(28.635308, 77.22496);
+        var pointB = new L.LatLng(48.984461, 97.70641);
+        var pointList = [pointA, pointB];
+
+        var firstpolyline = new L.Polyline(pointList, {
+            color: 'red',
+            weight: 3,
+            opacity: 1,
+            smoothFactor: 1
+        });
+
+        $('#NekiNaslov').text('dkjkasjdkasjdkasjd');
+        var overlayMaps = {
+            "Cafes": cafes,
+            "Lines": firstpolyline
+        };
+        L.control.layers(null, overlayMaps).addTo(map);
+
+
