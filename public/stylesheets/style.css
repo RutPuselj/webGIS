@@ -4,8 +4,9 @@ body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
-a:hover {
-  color: #111;
+h1 {
+  display: flex;
+  justify-content: center;
 }
 
 p {
@@ -16,36 +17,16 @@ p {
   margin: 22px;
 }
 
-select {
+input {
   margin: 20px;
 }
-
-#submitButton {
-  display: flex;
-  justify-content: flex-start;
-}
-
-#form {
-  display: flex;
-  flex-direction: column;
-}
-
-#map {
-  width: 100%;
-  height: 600px;
-}
-
-.dropdown:hover>.dropdown-menu {
-  display: block;
- }
 
 select {
   width: 20px;
 }
 
-h1 {
-  display: flex;
-  justify-content: center;
+a:hover {
+  color: #111;
 }
 
 ul {
@@ -69,6 +50,22 @@ li a {
 }
 
 /* Change the link color to #111 (black) on hover */
+
 li a:hover {
   background-color: #111;
+}
+
+#submitButton {
+  display: flex;
+  justify-content: flex-start;
+}
+
+#form {
+  display: flex;
+  flex-direction: column;
+}
+
+#map {
+  width: 100%;
+  height: 600px;
 }

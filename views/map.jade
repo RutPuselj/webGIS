@@ -2,12 +2,13 @@ extends layout
 
 block content
     #form
-        h3 Calculate shortest and fastest paths between cities in Croatia:
+        h3 Calculate the shortest and the fastest paths between cities in Croatia:
         div.row
             div.col-sm-1
                 p Source:
             div.col-sm-4
-                select.form-control
+                input#source.form-control(type='text', list='cofeshops', placeholder='e.g. Zagreb')
+                datalist#cofeshops
                     -var data = jsonData.features
                     -for(var prop in data)
                         option #{data[prop].properties.f2}
@@ -15,25 +16,34 @@ block content
             div.col-sm-1
                 p Destination:
             div.col-sm-4
-                select.form-control
+                input#destination.form-control(type='text', list='cofeshops', placeholder='e.g. Split')
+                datalist#cofeshops
                     -var data = jsonData.features
                     -for(var prop in data)
                         option #{data[prop].properties.f2}   
         div.row
             div.col-sm-2
                 p.form-check
-                    input#shortestPath.form-check-input(type='radio', name='exampleRadios', value='option1', checked='')
+                    input#shortestPath.form-check-input(type='radio', name='exampleRadios', value='shortestPath', checked='')
                     label.form-check-label(for='shortestPath')
                         | Shortest path
             div.col-sm-2
                 p.form-check
-                    input#fastestPath.form-check-input(type='radio', name='exampleRadios', value='option2')
+                    input#fastestPath.form-check-input(type='radio', name='exampleRadios', value='fastestPath')
                     label.form-check-label(for='fastestPath')
                         | Fastest path
         div.row
+            .col-sm-2
+                p.form-check
+                    input#checkHighway.form-check-input(type='checkbox', value='avoidHighway')
+                    label.form-check-label(for='checkHighway')
+                        | Avoid the highway
+
+        div.row
             #submitButton
                 p
-                    button.btn.btn-danger(type='button') CALCULATE
+                    button#submit.btn.btn-danger(type='button') CALCULATE
+
     #map
     .card
         .card-header   
@@ -78,7 +88,38 @@ block content
             smoothFactor: 1
         });
 
-        $('#NekiNaslov').text('dkjkasjdkasjdkasjd');
+        document.getElementById('submit').addEventListener('click', function() {
+            var source = $('#source').val();
+            var dest = $('#destination').val();
+            if ($('#shortestPath').is(':checked')) { 
+                var algorithm = $('#shortestPath').val(); 
+            }
+            if ($('#fastestPath').is(':checked')) { 
+                var algorithm = $('#fastestPath').val();
+            }
+            if ($('#checkHighway').is(':checked')) { 
+                var optional = $('#checkHighway').val();
+            } else {
+                var optional = null;
+            }
+            fetch('/getData', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    data: {
+                        source: source,
+                        destination: dest,
+                        path: algorithm,
+                        optional: optional
+                    }
+                })
+            }).then((response) => console.log(response));
+           
+        });
+
         var overlayMaps = {
             "Cafes": cafes,
             "Lines": firstpolyline
