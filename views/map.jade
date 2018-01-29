@@ -9,18 +9,14 @@ block content
             div.col-sm-4
                 input#source.form-control(type='text', list='cofeshops', placeholder='e.g. Zagreb')
                 datalist#cofeshops
-                    -var data = jsonData.features
-                    -for(var prop in data)
-                        option #{data[prop].properties.f2}
+
         div.row
             div.col-sm-1
                 p Destination:
             div.col-sm-4
                 input#destination.form-control(type='text', list='cofeshops', placeholder='e.g. Split')
                 datalist#cofeshops
-                    -var data = jsonData.features
-                    -for(var prop in data)
-                        option #{data[prop].properties.f2}   
+   
         div.row
             div.col-sm-2
                 p.form-check
@@ -52,15 +48,12 @@ block content
             thead
                 tr
                     th(scope='col') #
-                    th(scope='col') Cafe name
+                    th(scope='col') 
             tbody
-                -var data = jsonData.features
-                -for(var prop in data)
-                    tr
-                        th(scope='row')= prop
-                        td #{data[prop].properties.f2}
+
     script.
         var myData = !{JSON.stringify(jsonData)};
+
         // Create variable to hold map element, give initial settings to map
         var map = L.map('map', { 
             center: [44.4738, 16.4689], 
@@ -71,15 +64,22 @@ block content
         	attribution: '© OpenStreetMap' 
         }).addTo(map);
         // Add JSON to map
-        var cafes = L.geoJson(myData,{
+        /*var cafes = L.geoJson(myData,{
             onEachFeature: function (feature, layer) {
                 layer.bindPopup(feature.properties.f2);
             }
+        });*/
+
+        var pointList = [];
+
+        myData.rows.forEach(function(row) {
+            var point = new L.LatLng(row.row_to_json.st_y, row.row_to_json.st_x);
+            pointList.push(point);
         });
 
-        var pointA = new L.LatLng(28.635308, 77.22496);
-        var pointB = new L.LatLng(48.984461, 97.70641);
-        var pointList = [pointA, pointB];
+
+        //var pointA = new L.LatLng(28.635308, 77.22496);
+        //var pointB = new L.LatLng(48.984461, 97.70641);
 
         var firstpolyline = new L.Polyline(pointList, {
             color: 'red',
@@ -121,9 +121,9 @@ block content
         });
 
         var overlayMaps = {
-            "Cafes": cafes,
             "Lines": firstpolyline
         };
+
         L.control.layers(null, overlayMaps).addTo(map);
 
 
