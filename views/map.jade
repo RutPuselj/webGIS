@@ -7,15 +7,21 @@ block content
             div.col-sm-1
                 p Source:
             div.col-sm-4
-                input#source.form-control(type='text', list='cofeshops', placeholder='e.g. Zagreb')
-                datalist#cofeshops
+                input#source.form-control(type='text', list='cityNames', placeholder='e.g. Zagreb')
+                datalist#cityNames
+                   -var data = jsonDataCityNames.features
+                    -for(var prop in data)
+                        option #{data[prop].properties.f2}
 
         div.row
             div.col-sm-1
                 p Destination:
             div.col-sm-4
-                input#destination.form-control(type='text', list='cofeshops', placeholder='e.g. Split')
-                datalist#cofeshops
+                input#destination.form-control(type='text', list='cityNames', placeholder='e.g. Split')
+                datalist#cityNames
+                   -var data = jsonDataCityNames.features
+                    -for(var prop in data)
+                        option #{data[prop].properties.f2}
    
         div.row
             div.col-sm-2
@@ -48,8 +54,15 @@ block content
             thead
                 tr
                     th(scope='col') #
-                    th(scope='col') 
+                    th(scope='col') Source
+                    th(scope='col') Destination
+                    th(scope='col') Coordinates
             tbody
+                -var data = jsonData.features
+                -for(var prop in data)
+                    tr
+                        th(scope='row')= prop
+                        td #{data[prop].properties.f2}
 
     script.
         var myData = !{JSON.stringify(jsonData)};
