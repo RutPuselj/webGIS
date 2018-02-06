@@ -2,26 +2,26 @@ extends layout
 
 block content
     #form
-        h3 Calculate the shortest and the fastest paths between cities in Croatia:
+        h3 Calculate the shortest and the fastest paths between amenities in Bjelovar:
         div.row
             div.col-sm-1
                 p Source:
             div.col-sm-4
-                input#source.form-control(type='text', list='cityNames', placeholder='e.g. Zagreb')
-                datalist#cityNames
-                   //-var data = jsonDataCityNames.features
+                input#source.form-control(type='text', list='sourceList', placeholder='')
+                datalist#sourceList
+                   -var data = jsonData.rows
                     -for(var prop in data)
-                        option #{data[prop].properties.f2}
+                        option #{data[prop].row_to_json.name}
 
         div.row
             div.col-sm-1
                 p Destination:
             div.col-sm-4
-                input#destination.form-control(type='text', list='cityNames', placeholder='e.g. Split')
-                datalist#cityNames
-                   //-var data = jsonDataCityNames.features
+                input#destination.form-control(type='text', list='destinationList', placeholder='')
+                datalist#destinationList
+                   -var data = jsonData.rows
                     -for(var prop in data)
-                        option #{data[prop].properties.f2}
+                        option #{data[prop].row_to_json.name}
    
         div.row
             div.col-sm-2
@@ -58,30 +58,50 @@ block content
                     th(scope='col') Destination
                     th(scope='col') Coordinates
             tbody
-
+            
     script.
+        var myPoints = !{JSON.stringify(jsonData)};
+        console.log(myPoints);
         // Create variable to hold map element, give initial settings to map
         var map = L.map('map', { 
-            center: [44.4738, 16.4689], 
-            zoom: 7
+            center: [45.8988, 16.8423], 
+            zoom: 16
         }); 
+
         // Add OpenStreetMap tile layer to map element
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { 
         	attribution: '© OpenStreetMap' 
         }).addTo(map);
 
-        var marker_source = L.marker([45.784045, 15.979614], {'draggable': true}).addTo(map);
+        /*var marker_source = L.marker([45.784045, 15.979614], {'draggable': true}).addTo(map);
         marker_source.bindPopup('Source').openPopup();
 
         var marker_dest = L.marker([43.513016, 16.480865], {'draggable': true}).addTo(map);
-        marker_dest.bindPopup('Destination').openPopup();
+        marker_dest.bindPopup('Destination').openPopup();*/
 
         document.getElementById('submit').addEventListener('click', function() {
 
-            var source_lat = marker_source.getLatLng().lat;
+            var source_name = $('#source').val();
+            var destination_name = $('#destination').val();
+            var source_id = null;
+            var destination_id = null;
+
+            myPoints.rows.forEach(function (row) {
+                if (row.row_to_json.name === source_name) {
+                    source_id = row.row_to_json.id;
+                }
+            });
+
+            myPoints.rows.forEach(function (row) {
+                if (row.row_to_json.name === destination_name) {
+                    destination_id = row.row_to_json.id;
+                }
+            });
+
+            /*var source_lat = marker_source.getLatLng().lat;
             var source_lng = marker_source.getLatLng().lng;
             var dest_lat = marker_dest.getLatLng().lat;
-            var dest_lng = marker_dest.getLatLng().lng;
+            var dest_lng = marker_dest.getLatLng().lng;*/
 
             if ($('#shortestPath').is(':checked')) { 
                 var algorithm = $('#shortestPath').val(); 
@@ -102,10 +122,12 @@ block content
                 },
                 body: JSON.stringify({
                     data: {
-                        source_lat: source_lat,
+                        idSource: source_id,
+                        idDestination: destination_id,
+                        /*source_lat: source_lat,
                         source_lng: source_lng,
                         dest_lat: dest_lat,
-                        dest_lng: dest_lng,
+                        dest_lng: dest_lng,*/
                         path: algorithm,
                         optional: optional
                     }
@@ -113,23 +135,67 @@ block content
             }).then((response) => response.json()).then((res) => {
 
                 var pointList = [];
+                var unique_array = [];
 
                 res.rows.forEach(function(row) {
-                    var point1 = new L.LatLng(row.row_to_json.y1, row.row_to_json.x1);
-                    var point2 = new L.LatLng(row.row_to_json.y2, row.row_to_json.x2);
-                    pointList.push(point1);
-                    pointList.push(point2);
+                    var pointA = new L.LatLng(row.row_to_json.tg_y, row.row_to_json.tg_x);
+                    var pointB = new L.LatLng(row.row_to_json.src_y, row.row_to_json.src_x);
+                    pointList.push(pointA);
+                    pointList.push(pointB);
                 });
 
-                var croatia_roads = new L.Polyline(pointList, {
+                function isEquivalent(a, b) {
+                    // Create arrays of property names
+                    var aProps = Object.getOwnPropertyNames(a);
+                    var bProps = Object.getOwnPropertyNames(b);
+
+                    // If number of properties is different,
+                    // objects are not equivalent
+                    if (aProps.length != bProps.length) {
+                        return false;
+                    }
+
+                    for (var i = 0; i < aProps.length; i++) {
+                        var propName = aProps[i];
+
+                        // If values of same property are not equal,
+                        // objects are not equivalent
+                        if (a[propName] !== b[propName]) {
+                            return false;
+                        }
+                    }
+
+                    // If we made it this far, objects
+                    // are considered equivalent
+                    return true;
+                            }
+                var checker = false;
+                pointList.forEach(function(objElement, index){
+                    if (unique_array.length > 0){
+                        unique_array.forEach(function(nextObjElement){
+                            if(isEquivalent(objElement, nextObjElement)){
+                                checker = true;
+                            }
+                        });
+                        if(!checker){
+                            unique_array.push(objElement);
+                        }else{
+                            checker = false;
+                        }
+                    } else {
+                        unique_array.push(objElement);
+                    }
+                });
+
+                var croatia_roads = new L.Polyline(unique_array, {
                     color: 'red',
                     weight: 3,
                     opacity: 1,
-                    smoothFactor: 1
+                    smoothFactor: 1,
                 });
 
                 var overlayMaps = {
-                    "Lines": croatia_roads,
+                    "Roads": croatia_roads,
                 };
 
                 L.control.layers(null, overlayMaps).addTo(map);

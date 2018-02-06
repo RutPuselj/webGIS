@@ -21,7 +21,7 @@ input {
   margin: 20px;
 }
 
-select {
+datalist {
   width: 20px;
 }
 
