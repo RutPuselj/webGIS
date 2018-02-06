@@ -9,7 +9,7 @@ block content
             div.col-sm-4
                 input#source.form-control(type='text', list='cityNames', placeholder='e.g. Zagreb')
                 datalist#cityNames
-                   -var data = jsonDataCityNames.features
+                   //-var data = jsonDataCityNames.features
                     -for(var prop in data)
                         option #{data[prop].properties.f2}
 
@@ -19,7 +19,7 @@ block content
             div.col-sm-4
                 input#destination.form-control(type='text', list='cityNames', placeholder='e.g. Split')
                 datalist#cityNames
-                   -var data = jsonDataCityNames.features
+                   //-var data = jsonDataCityNames.features
                     -for(var prop in data)
                         option #{data[prop].properties.f2}
    
@@ -58,15 +58,8 @@ block content
                     th(scope='col') Destination
                     th(scope='col') Coordinates
             tbody
-                -var data = jsonData.features
-                -for(var prop in data)
-                    tr
-                        th(scope='row')= prop
-                        td #{data[prop].properties.f2}
 
     script.
-        var myData = !{JSON.stringify(jsonData)};
-
         // Create variable to hold map element, give initial settings to map
         var map = L.map('map', { 
             center: [44.4738, 16.4689], 
@@ -76,34 +69,20 @@ block content
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { 
         	attribution: '© OpenStreetMap' 
         }).addTo(map);
-        // Add JSON to map
-        /*var cafes = L.geoJson(myData,{
-            onEachFeature: function (feature, layer) {
-                layer.bindPopup(feature.properties.f2);
-            }
-        });*/
 
-        var pointList = [];
+        var marker_source = L.marker([45.784045, 15.979614], {'draggable': true}).addTo(map);
+        marker_source.bindPopup('Source').openPopup();
 
-        myData.rows.forEach(function(row) {
-            var point = new L.LatLng(row.row_to_json.st_y, row.row_to_json.st_x);
-            pointList.push(point);
-        });
-
-
-        //var pointA = new L.LatLng(28.635308, 77.22496);
-        //var pointB = new L.LatLng(48.984461, 97.70641);
-
-        var firstpolyline = new L.Polyline(pointList, {
-            color: 'red',
-            weight: 3,
-            opacity: 1,
-            smoothFactor: 1
-        });
+        var marker_dest = L.marker([43.513016, 16.480865], {'draggable': true}).addTo(map);
+        marker_dest.bindPopup('Destination').openPopup();
 
         document.getElementById('submit').addEventListener('click', function() {
-            var source = $('#source').val();
-            var dest = $('#destination').val();
+
+            var source_lat = marker_source.getLatLng().lat;
+            var source_lng = marker_source.getLatLng().lng;
+            var dest_lat = marker_dest.getLatLng().lat;
+            var dest_lng = marker_dest.getLatLng().lng;
+
             if ($('#shortestPath').is(':checked')) { 
                 var algorithm = $('#shortestPath').val(); 
             }
@@ -123,20 +102,41 @@ block content
                 },
                 body: JSON.stringify({
                     data: {
-                        source: source,
-                        destination: dest,
+                        source_lat: source_lat,
+                        source_lng: source_lng,
+                        dest_lat: dest_lat,
+                        dest_lng: dest_lng,
                         path: algorithm,
                         optional: optional
                     }
                 })
-            }).then((response) => console.log(response));
+            }).then((response) => response.json()).then((res) => {
+
+                var pointList = [];
+
+                res.rows.forEach(function(row) {
+                    var point1 = new L.LatLng(row.row_to_json.y1, row.row_to_json.x1);
+                    var point2 = new L.LatLng(row.row_to_json.y2, row.row_to_json.x2);
+                    pointList.push(point1);
+                    pointList.push(point2);
+                });
+
+                var croatia_roads = new L.Polyline(pointList, {
+                    color: 'red',
+                    weight: 3,
+                    opacity: 1,
+                    smoothFactor: 1
+                });
+
+                var overlayMaps = {
+                    "Lines": croatia_roads,
+                };
+
+                L.control.layers(null, overlayMaps).addTo(map);
+            });
            
         });
 
-        var overlayMaps = {
-            "Lines": firstpolyline
-        };
-
-        L.control.layers(null, overlayMaps).addTo(map);
+        
 
 

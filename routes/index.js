@@ -6,27 +6,10 @@ var pg = require("pg");
 
 // Database setup connection
 var username = 'postgres'; // sandbox username
-var password = 'postgres'; // read only privileges on our table
+var password = 'postgresrut'; // read only privileges on our table
 var host = 'localhost';
-var database = 'test_db'; // database name
+var database = 'hr_2po_4pgr'; // database name
 var databaseConnection = "postgres://" + username + ":" + password + "@" + host + "/" + database; // Your Database Connection
-
-
-// Set up your database query to display GeoJSON
-var coffee_query1 = "SELECT row_to_json(fc) FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type, ST_AsGeoJSON(lg.geom)::json As geometry, row_to_json((id, name)) As properties FROM cambridge_neighborhoods As lg) As f) As fc";
-var city_source = 'Zagreb';
-var city_dest = 'Rijeka';
-
-// osm_id od line
-var get_line_id_source = 'SELECT ml.id FROM my_line ml, my_point mp where mp.name = \'' + city_source + '\' ORDER BY ST_Distance(mp.way, ST_StartPoint(ml.way)) ASC LIMIT 1';
-var get_line_id_dest = 'SELECT ml.id FROM my_line ml, my_point mp where mp.name = \'' + city_dest + '\' ORDER BY ST_Distance(mp.way, ST_StartPoint(ml.way)) ASC LIMIT 1';
-
-// predajem osm_id i zelim dobit source i target integer
-var get_line_source = "select source from my_line where id = ";
-var get_line_dest = "select target from my_line where id = ";
-
-var bjelovar_query = "SELECT row_to_json(bj) from (SELECT id, seq, node, edge, cost as cost, agg_cost, st_x(st_startpoint(way)), st_y(st_startpoint(way)), st_x(st_endpoint(way)), st_y(st_endpoint(way)) FROM pgr_dijkstra('SELECT id, source, target, st_length(way, true) as cost FROM bjelovar_line',10,266) as pt JOIN bjelovar_line rd ON pt.edge = rd.id) bj";
-var city_names_query = 'SELECT...';
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -80,9 +63,13 @@ query.on("end", function (result) {
 /* GET the map page */
 router.get('/map', function (req, res) {
 
-    var client = new pg.Client(databaseConnection); // Setup our Postgres Client
+    res.render('map', {
+        title: 'GIS App'
+    });
+
+    /*var client = new pg.Client(databaseConnection); // Setup our Postgres Client
     client.connect(); // connect to the client
-    var query = client.query(city_names_query); // Run our Query
+    var query = client.query(croatia_roads); // Run our Query
     query.on("row", function (row, result) {
         result.addRow(row);
     });
@@ -91,33 +78,31 @@ router.get('/map', function (req, res) {
         var data = result.rows[0].row_to_json; // Save the JSON as variable data
         res.render('map', {
             title: "GIS App", // Give a title to our page
-            jsonDataCityNames: result // Pass data to the View
+            jsonData: result // Pass data to the View
         });
-    });
+    });*/
 });
 
 router.post('/getData', function (req, res) {
     var dataFromClient = req.body;
-    var clientQuery = '';
-    var city_source = dataFromClient.data.source;
-    var city_dest = dataFromClient.data.destination;
-    var algorithm = dataFromClient.data.algorithm;
-    var optional = dataFromClient.data.optional;
 
-    var client_query = 'SELECT....';
+    var source_lat = dataFromClient.data.source_lat;
+    var source_lng = dataFromClient.data.source_lng;
+    var dest_lat = dataFromClient.data.dest_lat;
+    var dest_lng = dataFromClient.data.dest_lng;
+
+    var croatia_roads = 'select row_to_json(hrv) from (SELECT pt.seq, pt.node, pt.edge, pt.cost, pt.agg_cost, rd.km, rd.kmh, rd.km/rd.kmh as vrijeme, rd.x1 as x1, rd.x2 as x2, rd.y1 as y1, rd.y2 as y2, rd.geom_way as geom FROM pgr_dijkstra(\'SELECT id, source, target, cost FROM hr_2po_4pgr\',(SELECT source FROM hr_2po_4pgr ORDER BY ST_Distance(ST_StartPoint(geom_way),ST_SetSRID(ST_MakePoint(' + source_lng + ',' + source_lat + '), 4326),true) ASC LIMIT 1),(SELECT source FROM hr_2po_4pgr ORDER BY ST_Distance(ST_StartPoint(geom_way),ST_SetSRID(ST_MakePoint(' + dest_lng + ',' + dest_lat + '), 4326),true) ASC LIMIT 1)) as pt JOIN hr_2po_4pgr rd ON pt.edge = rd.id) hrv';
 
     var client = new pg.Client(databaseConnection);
     client.connect();
-    var query = client.query(client_query);
+    var query = client.query(croatia_roads);
 
     query.on("row", function (row, result) {
         result.addRow(row);
     });
     query.on("end", function (result) {
-        var data = result.rows[0].row_to_json;
-        res.render('map', {
-            jsonData: data
-        });
+        //var data = result.rows[0].row_to_json;
+        res.status(200).send(result);
     });
 });
 
