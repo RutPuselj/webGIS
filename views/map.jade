@@ -56,22 +56,57 @@ block content
                     th(scope='col') #
                     th(scope='col') Source
                     th(scope='col') Destination
-                    th(scope='col') Coordinates
+                    th(scope='col') Distance [km]
+                    th(scope='col') Speed [km/h]
             tbody
             
     script.
+        var roadsData = !{JSON.stringify(allRoads)};
         var myPoints = !{JSON.stringify(jsonData)};
-        console.log(myPoints);
+
         // Create variable to hold map element, give initial settings to map
         var map = L.map('map', { 
             center: [45.8988, 16.8423], 
             zoom: 16
         }); 
 
+        var myIcon = L.icon({
+            iconUrl: 'https://openclipart.org/image/800px/svg_to_png/26900/led-circle-black.png',
+            iconSize: [27, 27],
+        });
+
         // Add OpenStreetMap tile layer to map element
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { 
         	attribution: '© OpenStreetMap' 
         }).addTo(map);
+        
+        myPoints.rows.forEach(function(row) {
+            L.marker([row.row_to_json.st_y, row.row_to_json.st_x], {icon: myIcon}).bindPopup(row.row_to_json.name).openPopup().addTo(map);
+        });
+
+        var road = [];
+        var all_bjelovar_roads = L.layerGroup();
+    
+        roadsData.rows.forEach(function(row) {
+            var source = new L.LatLng(row.row_to_json.tg_y, row.row_to_json.tg_x);
+            var destination = new L.LatLng(row.row_to_json.src_y, row.row_to_json.src_x);
+            road.push(source);
+            road.push(destination);
+            all_bjelovar_roads.addLayer(new L.Polyline(road, {
+                color: 'blue',
+                weight: 5,
+                opacity: 0.5,
+                smoothFactor: 1,
+            }));
+            road = [];
+         });
+
+        var overlayMaps = {
+            "Bjelovar topology": all_bjelovar_roads,
+        };
+
+        var layerControl = L.control.layers(null, overlayMaps).addTo(map);
+
 
         /*var marker_source = L.marker([45.784045, 15.979614], {'draggable': true}).addTo(map);
         marker_source.bindPopup('Source').openPopup();
@@ -135,73 +170,28 @@ block content
             }).then((response) => response.json()).then((res) => {
 
                 var pointList = [];
-                var unique_array = [];
+                var bjelovar_roads = L.layerGroup();
 
                 res.rows.forEach(function(row) {
                     var pointA = new L.LatLng(row.row_to_json.tg_y, row.row_to_json.tg_x);
                     var pointB = new L.LatLng(row.row_to_json.src_y, row.row_to_json.src_x);
                     pointList.push(pointA);
                     pointList.push(pointB);
+                    bjelovar_roads.addLayer(new L.Polyline(pointList, {
+                        color: 'red',
+                        weight: 5,
+                        opacity: 1,
+                        smoothFactor: 1,
+                    }));
+                    pointList = [];
                 });
 
-                function isEquivalent(a, b) {
-                    // Create arrays of property names
-                    var aProps = Object.getOwnPropertyNames(a);
-                    var bProps = Object.getOwnPropertyNames(b);
-
-                    // If number of properties is different,
-                    // objects are not equivalent
-                    if (aProps.length != bProps.length) {
-                        return false;
-                    }
-
-                    for (var i = 0; i < aProps.length; i++) {
-                        var propName = aProps[i];
-
-                        // If values of same property are not equal,
-                        // objects are not equivalent
-                        if (a[propName] !== b[propName]) {
-                            return false;
-                        }
-                    }
-
-                    // If we made it this far, objects
-                    // are considered equivalent
-                    return true;
-                            }
-                var checker = false;
-                pointList.forEach(function(objElement, index){
-                    if (unique_array.length > 0){
-                        unique_array.forEach(function(nextObjElement){
-                            if(isEquivalent(objElement, nextObjElement)){
-                                checker = true;
-                            }
-                        });
-                        if(!checker){
-                            unique_array.push(objElement);
-                        }else{
-                            checker = false;
-                        }
-                    } else {
-                        unique_array.push(objElement);
-                    }
-                });
-
-                var croatia_roads = new L.Polyline(unique_array, {
-                    color: 'red',
-                    weight: 3,
-                    opacity: 1,
-                    smoothFactor: 1,
-                });
-
-                var overlayMaps = {
-                    "Roads": croatia_roads,
-                };
-
-                L.control.layers(null, overlayMaps).addTo(map);
+                layerControl.addOverlay(bjelovar_roads, source_name + ' - ' + destination_name);
             });
            
         });
+
+
 
         
 
