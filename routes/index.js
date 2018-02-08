@@ -101,8 +101,8 @@ router.post('/getData', function (req, res) {
     var destination_id = dataFromClient.data.idDestination;
     var algorithm = dataFromClient.data.path;
 
-    var mlin_query_shortest = 'select row_to_json(hrv) from (SELECT pt.seq, pt.node, pt.edge, pt.cost, pt.agg_cost, st_x(st_startpoint(rd.geom)) as src_x, st_y(st_startpoint(rd.geom)) as src_y, st_x(st_endpoint(rd.geom)) as tg_x, st_y(st_endpoint(rd.geom)) as tg_y FROM pgr_dijkstra(\'SELECT id, source, target, km as cost FROM mlin_lines\', ' + source_id + ' , ' + destination_id + ') as pt JOIN mlin_lines rd ON pt.edge = rd.id) hrv';
-    var mlin_query_fastest = 'select row_to_json(hrv) from (SELECT pt.seq, pt.node, pt.edge, pt.cost, pt.agg_cost, st_x(st_startpoint(rd.geom)) as src_x, st_y(st_startpoint(rd.geom)) as src_y, st_x(st_endpoint(rd.geom)) as tg_x, st_y(st_endpoint(rd.geom)) as tg_y FROM pgr_dijkstra(\'SELECT id, source, target, km/kmh as cost FROM mlin_lines\', ' + source_id + ' , ' + destination_id + ') as pt JOIN mlin_lines rd ON pt.edge = rd.id) hrv';
+    var mlin_query_shortest = 'select row_to_json(hrv) from (SELECT rd.km, rd.kmh, pt.seq, pt.node, pt.edge, pt.cost, pt.agg_cost, st_x(st_startpoint(rd.geom)) as src_x, st_y(st_startpoint(rd.geom)) as src_y, st_x(st_endpoint(rd.geom)) as tg_x, st_y(st_endpoint(rd.geom)) as tg_y FROM pgr_dijkstra(\'SELECT id, source, target, km as cost FROM mlin_lines\', ' + source_id + ' , ' + destination_id + ') as pt JOIN mlin_lines rd ON pt.edge = rd.id) hrv';
+    var mlin_query_fastest = 'select row_to_json(hrv) from (SELECT rd.km, rd.kmh, pt.seq, pt.node, pt.edge, pt.cost, pt.agg_cost, st_x(st_startpoint(rd.geom)) as src_x, st_y(st_startpoint(rd.geom)) as src_y, st_x(st_endpoint(rd.geom)) as tg_x, st_y(st_endpoint(rd.geom)) as tg_y FROM pgr_dijkstra(\'SELECT id, source, target, km/kmh as cost FROM mlin_lines\', ' + source_id + ' , ' + destination_id + ') as pt JOIN mlin_lines rd ON pt.edge = rd.id) hrv';
 
     /*var source_lat = dataFromClient.data.source_lat;
     var source_lng = dataFromClient.data.source_lng;

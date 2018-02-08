@@ -34,12 +34,6 @@ block content
                     input#fastestPath.form-check-input(type='radio', name='exampleRadios', value='fastestPath')
                     label.form-check-label(for='fastestPath')
                         | Fastest path
-        div.row
-            .col-sm-2
-                p.form-check
-                    input#checkHighway.form-check-input(type='checkbox', value='avoidHighway')
-                    label.form-check-label(for='checkHighway')
-                        | Avoid the highway
 
         div.row
             #submitButton
@@ -58,7 +52,8 @@ block content
                     th(scope='col') Destination
                     th(scope='col') Distance [km]
                     th(scope='col') Speed [km/h]
-            tbody
+            tbody#resultTable
+    #meow
             
     script.
         var roadsData = !{JSON.stringify(allRoads)};
@@ -79,9 +74,11 @@ block content
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { 
         	attribution: '© OpenStreetMap' 
         }).addTo(map);
+
+        var bjelovar_points = L.layerGroup();
         
         myPoints.rows.forEach(function(row) {
-            L.marker([row.row_to_json.st_y, row.row_to_json.st_x], {icon: myIcon}).bindPopup(row.row_to_json.name).openPopup().addTo(map);
+            bjelovar_points.addLayer(L.marker([row.row_to_json.st_y, row.row_to_json.st_x], {icon: myIcon}).bindPopup(row.row_to_json.name).openPopup());
         });
 
         var road = [];
@@ -103,6 +100,7 @@ block content
 
         var overlayMaps = {
             "Bjelovar topology": all_bjelovar_roads,
+            "Bjelovar amenities": bjelovar_points
         };
 
         var layerControl = L.control.layers(null, overlayMaps).addTo(map);
@@ -115,6 +113,8 @@ block content
         marker_dest.bindPopup('Destination').openPopup();*/
 
         document.getElementById('submit').addEventListener('click', function() {
+
+            
 
             var source_name = $('#source').val();
             var destination_name = $('#destination').val();
@@ -171,6 +171,9 @@ block content
 
                 var pointList = [];
                 var bjelovar_roads = L.layerGroup();
+                var counter = 0;
+                var nekiElement = document.getElementById('resultTable');
+                nekiElement.innerHTML = '';
 
                 res.rows.forEach(function(row) {
                     var pointA = new L.LatLng(row.row_to_json.tg_y, row.row_to_json.tg_x);
@@ -184,6 +187,12 @@ block content
                         smoothFactor: 1,
                     }));
                     pointList = [];
+                    var tableRow = document.createElement('tr');
+                    tableRow.innerHTML = '<th>' + counter + '</th><th>[' + row.row_to_json.src_x + ', ' + row.row_to_json.src_y + ']</th><th>[' + row.row_to_json.tg_x + ', ' + row.row_to_json.tg_y + ']</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th>';
+                    nekiElement.appendChild(tableRow);
+                    //nekiElement.appendChild('<tr><th>' + counter + '</th><th>[ ' + row.row_to_json.src_x + ' , ' + row.row_to_json.src_y + ' ]</th><th>[ ' + row.row_to_json.tg_x + ' , ' + row.row_to_json.tg_y + ' ]</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th></tr>');
+                    //nekiElement.innerHTML = '<tr><th>' + counter + '</th><th>[ ' + row.row_to_json.src_x + ' , ' + row.row_to_json.src_y + ' ]</th><th>[ ' + row.row_to_json.tg_x + ' , ' + row.row_to_json.tg_y + ' ]</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th></tr>';
+                    
                 });
 
                 layerControl.addOverlay(bjelovar_roads, source_name + ' - ' + destination_name);
