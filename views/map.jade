@@ -52,6 +52,7 @@ block content
                     th(scope='col') Destination
                     th(scope='col') Distance [km]
                     th(scope='col') Speed [km/h]
+                    th(scope='col') Aggregated cost [km or h]
             tbody#resultTable
     #meow
             
@@ -114,8 +115,6 @@ block content
 
         document.getElementById('submit').addEventListener('click', function() {
 
-            
-
             var source_name = $('#source').val();
             var destination_name = $('#destination').val();
             var source_id = null;
@@ -174,6 +173,7 @@ block content
                 var counter = 0;
                 var nekiElement = document.getElementById('resultTable');
                 nekiElement.innerHTML = '';
+                var cost = 0;
 
                 res.rows.forEach(function(row) {
                     var pointA = new L.LatLng(row.row_to_json.tg_y, row.row_to_json.tg_x);
@@ -186,9 +186,11 @@ block content
                         opacity: 1,
                         smoothFactor: 1,
                     }));
+                    cost += row.row_to_json.cost;
                     pointList = [];
+                    counter += 1;
                     var tableRow = document.createElement('tr');
-                    tableRow.innerHTML = '<th>' + counter + '</th><th>[' + row.row_to_json.src_x + ', ' + row.row_to_json.src_y + ']</th><th>[' + row.row_to_json.tg_x + ', ' + row.row_to_json.tg_y + ']</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th>';
+                    tableRow.innerHTML = '<th>' + counter + '</th><th>[' + row.row_to_json.src_x + ', ' + row.row_to_json.src_y + ']</th><th>[' + row.row_to_json.tg_x + ', ' + row.row_to_json.tg_y + ']</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th><th>' + cost + '</th>';
                     nekiElement.appendChild(tableRow);
                     //nekiElement.appendChild('<tr><th>' + counter + '</th><th>[ ' + row.row_to_json.src_x + ' , ' + row.row_to_json.src_y + ' ]</th><th>[ ' + row.row_to_json.tg_x + ' , ' + row.row_to_json.tg_y + ' ]</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th></tr>');
                     //nekiElement.innerHTML = '<tr><th>' + counter + '</th><th>[ ' + row.row_to_json.src_x + ' , ' + row.row_to_json.src_y + ' ]</th><th>[ ' + row.row_to_json.tg_x + ' , ' + row.row_to_json.tg_y + ' ]</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th></tr>';
