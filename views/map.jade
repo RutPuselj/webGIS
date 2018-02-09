@@ -119,16 +119,24 @@ block content
             var destination_name = $('#destination').val();
             var source_id = null;
             var destination_id = null;
+            var source_x = null;
+            var source_y = null;
+            var dest_x = null;
+            var dest_y = null;
 
             myPoints.rows.forEach(function (row) {
                 if (row.row_to_json.name === source_name) {
                     source_id = row.row_to_json.id;
+                    source_x = row.row_to_json.st_x;
+                    source_y = row.row_to_json.st_y;
                 }
             });
 
             myPoints.rows.forEach(function (row) {
                 if (row.row_to_json.name === destination_name) {
                     destination_id = row.row_to_json.id;
+                    dest_x = row.row_to_json.st_x;
+                    dest_y = row.row_to_json.st_y;
                 }
             });
 
@@ -174,6 +182,9 @@ block content
                 var nekiElement = document.getElementById('resultTable');
                 nekiElement.innerHTML = '';
                 var cost = 0;
+                var last_road_x = null;
+                var last_road_y = null;
+                var flag = false;
 
                 res.rows.forEach(function(row) {
                     var pointA = new L.LatLng(row.row_to_json.tg_y, row.row_to_json.tg_x);
@@ -186,15 +197,41 @@ block content
                         opacity: 1,
                         smoothFactor: 1,
                     }));
+                    
                     cost += row.row_to_json.cost;
                     pointList = [];
                     counter += 1;
                     var tableRow = document.createElement('tr');
-                    tableRow.innerHTML = '<th>' + counter + '</th><th>[' + row.row_to_json.src_x + ', ' + row.row_to_json.src_y + ']</th><th>[' + row.row_to_json.tg_x + ', ' + row.row_to_json.tg_y + ']</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th><th>' + cost + '</th>';
+                    if (!flag) {
+                        if (row.row_to_json.src_x === source_x && row.row_to_json.src_y === source_y) {
+                            flag = true;
+                            tableRow.innerHTML = '<th>' + counter + '</th><th>[' + row.row_to_json.src_x + ', ' + row.row_to_json.src_y + ']</th><th>[' + row.row_to_json.tg_x + ', ' + row.row_to_json.tg_y + ']</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th><th>' + cost + '</th>';
+                            last_road_x = row.row_to_json.tg_x;
+                        	last_road_y = row.row_to_json.tg_y;
+                        } else {
+                            tableRow.innerHTML = '<th>' + counter + '</th><th>[' + row.row_to_json.tg_x + ', ' + row.row_to_json.tg_y + ']</th><th>[' + row.row_to_json.src_x + ', ' + row.row_to_json.src_y + ']</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th><th>' + cost + '</th>';
+                            flag = true;
+                            last_road_x = row.row_to_json.src_x;
+                            last_road_y = row.row_to_json.src_y;
+                        }
+                    } else {
+
+                        if (row.row_to_json.src_x === last_road_x && row.row_to_json.src_y === last_road_y){
+                            tableRow.innerHTML = '<th>' + counter + '</th><th>[' + row.row_to_json.src_x + ', ' + row.row_to_json.src_y + ']</th><th>[' + row.row_to_json.tg_x + ', ' + row.row_to_json.tg_y + ']</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th><th>' + cost + '</th>';
+                            last_road_x = row.row_to_json.tg_x;
+                            last_road_y = row.row_to_json.tg_y;
+                        }else{
+                            tableRow.innerHTML = '<th>' + counter + '</th><th>[' + row.row_to_json.tg_x + ', ' + row.row_to_json.tg_y + ']</th><th>[' + row.row_to_json.src_x + ', ' + row.row_to_json.src_y + ']</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th><th>' + cost + '</th>';
+                            last_road_x = row.row_to_json.src_x;
+                            last_road_y = row.row_to_json.src_y;
+                        }
+                    }
+                    
+
                     nekiElement.appendChild(tableRow);
                     //nekiElement.appendChild('<tr><th>' + counter + '</th><th>[ ' + row.row_to_json.src_x + ' , ' + row.row_to_json.src_y + ' ]</th><th>[ ' + row.row_to_json.tg_x + ' , ' + row.row_to_json.tg_y + ' ]</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th></tr>');
                     //nekiElement.innerHTML = '<tr><th>' + counter + '</th><th>[ ' + row.row_to_json.src_x + ' , ' + row.row_to_json.src_y + ' ]</th><th>[ ' + row.row_to_json.tg_x + ' , ' + row.row_to_json.tg_y + ' ]</th><th>' + row.row_to_json.km + '</th><th>' + row.row_to_json.kmh + '</th></tr>';
-                    
+
                 });
 
                 layerControl.addOverlay(bjelovar_roads, source_name + ' - ' + destination_name);
