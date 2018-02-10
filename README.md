@@ -1,19 +1,16 @@
 # webGIS
+Web application for measuring the shortest and the fastest paths between amenities in Bjelovar, Croatia.
+Only works with appropriate PostgreSQL database. :)
 
-After cloning the project, inside the working directory run
+This application requires [Node.js](https://nodejs.org/) to run. 
+
+Clone the project. Inside the working directory, install the dependencies and start the server to run the project.
 
 ```sh
 npm install
-```
-
-to install the node modules.
-
-After that, to start the project, run 
-
-```sh
 npm start
 ```
 
-and go to localhost:3000/data to see the data from the database and localhost:3000/map to see the map.
+You can see the map on localhost:3000/map route. 
 
-Enjoy :)
+Enjoy. :)
